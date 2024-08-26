@@ -12,13 +12,16 @@ async function createUpload(file) {
     try {
         const form = new FormData();
         form.append("upload[files][0]", fs.createReadStream(file), "test.tmp");
+                                                                                                                    console. log("file appended")
 
         const config = {
             headers: form.getHeaders(),
             maxContentLength: 999999999999,
             maxBodyLength: 999999999999,
         }
+                                                                                                                    console. log("Header done");
         const response = await axios.post("/uploads.json", form, config);
+                                                                                                                    console. log("createUpload response: " + response.data.id);
         return response.data.id;
     } catch (e) {
         console.error("Error creating upload: " + e.message);
@@ -29,7 +32,9 @@ async function createUpload(file) {
 
 async function getUploadMediaAssetId(id) {
     try {
+                                                                                                                    console. log("Danbooru ID :" + id);
         const response = await axios.get(`/uploads/${id}.json`);
+                                                                                                                    console. log("Danbooru return: " + response.data.id);
         return response.data.upload_media_assets[0].id;
     } catch (e) {
         console.error("Error fetching upload information: " + e.message);
@@ -43,7 +48,8 @@ async function createPost(id, tags, rating, source) {
         const form = new FormData();
         form.append("upload_media_asset_id", id);
         form.append("post[tag_string]", tags);
-        //form.append("post[rating]", rating.substring(0, 1).toUpperCase());
+        //g, s, q, or e are the accepted input as of 26/08/2024
+        form.append("post[rating]", rating.charAt(0).toLowerCase());
         form.append("post[source]", source);
 
         const response = await axios.post("posts.json", form, { headers: form.getHeaders() });
@@ -67,9 +73,13 @@ async function createPost(id, tags, rating, source) {
     axios.defaults.headers.common["Accept"] = "application/json";
 
     // Create post
+        await new Promise(r => setTimeout(r, 1));
     const uploadId = await createUpload(argv[3]);
+        await new Promise(r => setTimeout(r, 1));
     const mediaAssetId = await getUploadMediaAssetId(uploadId);
+        await new Promise(r => setTimeout(r, 1));
     const postId = await createPost(mediaAssetId, argv[0], argv[1], argv[2]);
+        await new Promise(r => setTimeout(r, 1));
 
     // Open browser
     if (OPEN_BROWSER) {
